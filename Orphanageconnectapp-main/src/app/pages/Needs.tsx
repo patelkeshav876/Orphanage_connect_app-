@@ -7,6 +7,7 @@ import { Filter, Search } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Link } from 'react-router';
 import { api } from '../lib/api';
+import { addNeedToCart } from '../lib/donationCart';
 import type { Need } from '../types';
 import { ScrollReveal } from '../components/ScrollReveal';
 
@@ -65,7 +66,12 @@ export function Needs() {
       </div>
 
       <div className="p-4 space-y-4">
-        {filteredNeeds.map(need => (
+        {filteredNeeds.map(need => {
+          const goal = Number(need.quantityRequired) || 0;
+          const raised = Number(need.quantityFulfilled) || 0;
+          const remaining = Math.max(0, goal - raised);
+          const pct = goal > 0 ? Math.round((raised / goal) * 100) : 0;
+          return (
           <ScrollReveal key={need.id}>
           <Card className="overflow-hidden border-none shadow-sm bg-card">
             <div className="flex flex-col sm:flex-row gap-4 p-4">
@@ -85,23 +91,34 @@ export function Needs() {
                   <div className="flex justify-between items-start mb-1">
                     <span className="text-xs font-medium text-muted-foreground">{need.category}</span>
                     <span className="text-xs font-medium text-muted-foreground">
-                      {Math.round((need.quantityFulfilled / need.quantityRequired) * 100)}% Funded
+                      {pct}% funded
                     </span>
                   </div>
                   <h3 className="font-bold text-lg text-foreground mb-1">{need.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{need.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{need.description}</p>
+                  <p className="text-xs font-semibold text-primary mb-1">
+                    ₹{remaining.toLocaleString()} left to complete this need
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Goal ₹{goal.toLocaleString()} · Raised ₹{raised.toLocaleString()}
+                  </p>
                 </div>
 
                 <div>
-                  <div className="h-2 w-full bg-secondary/30 rounded-full overflow-hidden mb-2">
+                  <div className="h-2 w-full bg-secondary/30 rounded-full overflow-hidden mb-2 mt-2">
                     <div 
                       className="h-full bg-primary rounded-full transition-all duration-500" 
-                      style={{ width: `${(need.quantityFulfilled / need.quantityRequired) * 100}%` }}
+                      style={{ width: `${goal > 0 ? Math.min(100, (raised / goal) * 100) : 0}%` }}
                     />
                   </div>
                   <div className="flex gap-2">
                     <Button className="flex-1" size="sm" asChild>
-                       <Link to={`/donate/${need.ashramId}?need=${need.id}`}>Donate Now</Link>
+                       <Link
+                         to={`/donate/${need.ashramId}?need=${need.id}`}
+                         onClick={() => addNeedToCart(need)}
+                       >
+                         Donate now
+                       </Link>
                     </Button>
                     <Button variant="outline" size="sm">Share</Button>
                   </div>
@@ -110,7 +127,8 @@ export function Needs() {
             </div>
           </Card>
           </ScrollReveal>
-        ))}
+          );
+        })}
         {filteredNeeds.length === 0 && (
             <div className="text-center py-10 text-muted-foreground">
                 <p>No needs found matching your criteria.</p>

@@ -14,7 +14,9 @@ import {
   TrendingUp,
   Home,
   Heart,
-  IndianRupee
+  IndianRupee,
+  Activity,
+  Clock3
 } from 'lucide-react';
 import { mockNeeds, mockAshrams } from '../../data/mock';
 
@@ -74,58 +76,89 @@ export function AdminDashboard() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-primary to-primary/80 p-6 pb-8 rounded-b-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-serif font-bold text-white">Admin Dashboard</h1>
-            <p className="text-sm text-white/80">{ashram.name}</p>
-          </div>
-          <Link to="/admin/settings">
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/20 text-white">
-              <SettingsIcon className="h-6 w-6" />
-            </Button>
-          </Link>
-        </div>
+      <div className="bg-[#0d130f] text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(163,230,53,0.14),transparent_55%),radial-gradient(circle_at_85%_10%,rgba(16,185,129,0.1),transparent_45%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:22px_22px] opacity-25" />
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {stats.map((stat, idx) => (
-            <Card key={idx} className="border-none shadow-md bg-white/95">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${stat.color}`}>
-                    <stat.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="relative p-5 space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-serif font-bold">Admin Dashboard</h1>
+              <p className="text-sm text-white/80">{ashram.name}</p>
+            </div>
+            <Link to="/admin/settings">
+              <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white">
+                <SettingsIcon className="h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+
+          {/* Premium admin balance card */}
+          <Card className="bg-[#c5e54d] text-zinc-900 border-0 shadow-2xl rounded-3xl">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium opacity-80">Total Donations Managed</p>
+                <Badge className="bg-zinc-900 text-white border-0">LIVE</Badge>
+              </div>
+              <div className="mt-1 flex items-end gap-1">
+                <IndianRupee className="h-6 w-6" />
+                <p className="text-4xl font-bold tracking-tight">{stats[0].value.replace('₹', '')}</p>
+              </div>
+              <div className="mt-2 flex items-center gap-2 text-xs opacity-80">
+                <Clock3 className="h-3.5 w-3.5" />
+                <span>Updated just now</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2 mt-4">
+                <Link to="/admin/needs">
+                  <button type="button" className="w-full bg-zinc-900 text-white rounded-xl py-2 text-[11px] font-medium">Needs</button>
+                </Link>
+                <Link to="/admin/events">
+                  <button type="button" className="w-full bg-zinc-900 text-white rounded-xl py-2 text-[11px] font-medium">Events</button>
+                </Link>
+                <Link to="/admin/vendors">
+                  <button type="button" className="w-full bg-zinc-900 text-white rounded-xl py-2 text-[11px] font-medium">Vendors</button>
+                </Link>
+                <Link to="/admin/products">
+                  <button type="button" className="w-full bg-zinc-900 text-white rounded-xl py-2 text-[11px] font-medium">Products</button>
+                </Link>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
 
-      <div className="p-6 -mt-4">
-        {/* Quick Actions */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Quick Actions</h2>
-          <Badge className="bg-primary/10 text-primary border-primary/20">
-            Super Admin
-          </Badge>
+      <div className="p-5 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="p-4 rounded-2xl">
+            <div className="flex items-center gap-2 mb-1 text-muted-foreground">
+              <Activity className="h-4 w-4" />
+              <span className="text-xs">Active Needs</span>
+            </div>
+            <p className="text-2xl font-bold">{mockNeeds.length}</p>
+          </Card>
+          <Card className="p-4 rounded-2xl">
+            <div className="flex items-center gap-2 mb-1 text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span className="text-xs">Total Donors</span>
+            </div>
+            <p className="text-2xl font-bold">{stats[3].value}</p>
+          </Card>
         </div>
-        
-        <div className="grid grid-cols-3 gap-3 mb-8">
+
+        {/* Quick Actions */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">Quick Actions</h2>
+          <Badge className="bg-primary/10 text-primary border-primary/20">Super Admin</Badge>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
           {quickActions.map((action, idx) => (
             <Link key={idx} to={action.link}>
-              <Card className="hover:bg-muted/50 active:scale-95 transition-all cursor-pointer border-none shadow-sm h-full">
-                <CardContent className="p-4 flex flex-col items-center gap-2">
-                  <div className={`h-12 w-12 rounded-full flex items-center justify-center ${action.color}`}>
-                    <action.icon className="h-6 w-6" />
+              <Card className="hover:bg-muted/50 active:scale-95 transition-all cursor-pointer h-full">
+                <CardContent className="p-3 flex flex-col items-center gap-2">
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${action.color}`}>
+                    <action.icon className="h-5 w-5" />
                   </div>
-                  <span className="text-xs font-medium text-center">{action.label}</span>
+                  <span className="text-[11px] font-medium text-center">{action.label}</span>
                 </CardContent>
               </Card>
             </Link>
@@ -133,28 +166,26 @@ export function AdminDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <h2 className="text-lg font-bold mb-4">Recent Activity</h2>
-        <div className="space-y-3">
-          {recentActivities.map((activity, idx) => (
-            <Card key={idx} className="border-none shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${activity.color}`}>
-                    <activity.icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{activity.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{activity.description}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{activity.time}</p>
-                  </div>
+        <Card className="p-4 rounded-2xl">
+          <h2 className="text-sm font-semibold mb-3">Recent Admin Activity</h2>
+          <div className="space-y-2">
+            {recentActivities.map((activity, idx) => (
+              <div key={idx} className="rounded-xl bg-muted/50 px-3 py-2 flex items-start gap-2">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.color}`}>
+                  <activity.icon className="h-4 w-4" />
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium">{activity.title}</p>
+                  <p className="text-[11px] text-muted-foreground line-clamp-1">{activity.description}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{activity.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
 
         {/* Quick Create */}
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Link to="/admin/needs/create">
             <Button className="w-full h-12 gap-2" variant="default">
               <Plus className="h-4 w-4" />

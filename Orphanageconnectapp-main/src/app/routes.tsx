@@ -6,6 +6,7 @@ import { AshramDetail } from './pages/AshramDetail';
 import { Donation } from './pages/Donation';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
 import { Onboarding } from './pages/Onboarding';
 import { Needs } from './pages/Needs';
 import { Events } from './pages/Events';
@@ -89,5 +90,9 @@ export const router = createBrowserRouter([
   {
     path: '/onboarding',
     element: <RootLayout><Onboarding /></RootLayout>,
+  },
+  {
+    path: '/signup',
+    element: <RootLayout><Signup /></RootLayout>,
   }
 ]);

@@ -96,6 +96,8 @@ export const api = {
     fetchAPI(userId ? `/donations?userId=${encodeURIComponent(userId)}` : '/donations'),
   createDonation: (data: Record<string, unknown>) =>
     fetchAPI('/donations', { method: 'POST', body: JSON.stringify(data) }),
+  createDonationsBatch: (data: Record<string, unknown>) =>
+    fetchAPI('/donations/batch', { method: 'POST', body: JSON.stringify(data) }),
 
   getFavorites: (userId: string) =>
     fetchAPI(`/favorites?userId=${encodeURIComponent(userId)}`),

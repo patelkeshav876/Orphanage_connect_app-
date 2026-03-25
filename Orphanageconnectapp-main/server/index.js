@@ -377,6 +377,20 @@ app.post('/api/posts/:id/like', async (req, res) => {
 });
 
 // --- Donations ---
+async function applyDonationToNeed(needId, amount) {
+  if (!needId || amount == null) return;
+  const n = Number(amount);
+  if (!Number.isFinite(n) || n <= 0) return;
+  const need = await Need.findOne({ id: needId }).lean();
+  if (!need) return;
+  const { _id, ...nrest } = need;
+  const reqTot = Number(nrest.quantityRequired) || 0;
+  const prev = Number(nrest.quantityFulfilled) || 0;
+  const next = prev + n;
+  const qf = reqTot > 0 ? Math.min(reqTot, next) : next;
+  await Need.findOneAndUpdate({ id: needId }, { ...nrest, quantityFulfilled: qf }, { upsert: true }).lean();
+}
+
 app.get('/api/donations', async (req, res) => {
   try {
     const { userId } = req.query;
@@ -401,18 +415,46 @@ app.post('/api/donations', async (req, res) => {
     await Donation.findOneAndUpdate({ id }, doc, { upsert: true, new: true }).lean();
 
     if (donation.needId) {
-      const need = await Need.findOne({ id: donation.needId }).lean();
-      if (need) {
-        const { _id, ...nrest } = need;
-        const qf = (nrest.quantityFulfilled || 0) + (donation.amount || 0);
-        await Need.findOneAndUpdate(
-          { id: donation.needId },
-          { ...nrest, quantityFulfilled: qf },
-          { upsert: true },
-        ).lean();
-      }
+      await applyDonationToNeed(donation.needId, donation.amount);
     }
     res.json(doc);
+  } catch (e) {
+    res.status(500).json({ error: String(e.message) });
+  }
+});
+
+/** Multiple need-specific donations in one checkout — one DB row per line */
+app.post('/api/donations/batch', async (req, res) => {
+  try {
+    const { userId, ashramId, lines, date, status } = req.body || {};
+    if (!userId || !ashramId || !Array.isArray(lines) || lines.length === 0) {
+      return res.status(400).json({ error: 'userId, ashramId and non-empty lines[] are required' });
+    }
+    const baseDate = date || new Date().toISOString();
+    const baseStatus = status || 'completed';
+    const donations = [];
+    let i = 0;
+    for (const line of lines) {
+      const amt = Number(line.amount);
+      if (!line.needId || !Number.isFinite(amt) || amt <= 0) continue;
+      const id = `donation-${Date.now()}-${i++}-${Math.random().toString(36).slice(2, 9)}`;
+      const doc = {
+        id,
+        userId,
+        ashramId,
+        needId: line.needId,
+        amount: amt,
+        date: baseDate,
+        status: baseStatus,
+      };
+      await Donation.findOneAndUpdate({ id }, doc, { upsert: true, new: true }).lean();
+      await applyDonationToNeed(line.needId, amt);
+      donations.push(doc);
+    }
+    if (donations.length === 0) {
+      return res.status(400).json({ error: 'No valid donation lines' });
+    }
+    res.json({ donations });
   } catch (e) {
     res.status(500).json({ error: String(e.message) });
   }

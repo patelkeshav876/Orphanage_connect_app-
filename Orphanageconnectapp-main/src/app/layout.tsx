@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './components/SplashScreen';
@@ -7,12 +8,14 @@ import { cn } from './lib/utils';
 export function Layout() {
   const location = useLocation();
   const { loading } = useUser();
+  const [continued, setContinued] = useState(false);
   const hideBottomNav = ['/login', '/onboarding', '/donate', '/admin'].some((path) =>
     location.pathname.startsWith(path)
   );
 
-  if (loading) {
-    return <SplashScreen />;
+  // Keep the splash visible until the user clicks "Continue".
+  if (loading || !continued) {
+    return <SplashScreen onFinish={() => setContinued(true)} />;
   }
 
   return (

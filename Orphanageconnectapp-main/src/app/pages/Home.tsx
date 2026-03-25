@@ -21,6 +21,7 @@ import { Link, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { useUser } from '../context/UserContext';
 import { api } from '../lib/api';
+import { addNeedToCart } from '../lib/donationCart';
 import {
   Ashram,
   type Event as EventType,
@@ -67,136 +68,123 @@ export function Home() {
   // Calculate stats
   const urgentNeeds = needs.filter(n => n.urgency === 'high');
   const mainRef = useRef<HTMLElement | null>(null);
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
-  const heroPanelRef = useRef<HTMLDivElement | null>(null);
 
-  const handleHeroPointerMove = (e: any) => {
-    const el = heroPanelRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const px = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    const py = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
-    const ry = (px - 0.5) * 10; // rotateY
-    const rx = (0.5 - py) * 8; // rotateX
-    setTilt({ rx, ry });
-  };
-
-  const handleHeroPointerLeave = () => {
-    setTilt({ rx: 0, ry: 0 });
-  };
+  const heroImage =
+    ashram.imageUrl ||
+    'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80';
+  const galleryThumbs = ashram.gallery?.slice(0, 3) ?? [];
 
   return (
     <div className="flex flex-col min-h-screen bg-background pb-20">
-      {/* Hero Section */}
-      <div className="relative min-h-[360px] bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-700 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80')] opacity-15 bg-cover bg-center" />
-        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(to_right,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:28px_28px]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
-
-        {/* Light sweeps */}
-        <motion.div
-          aria-hidden
-          className="absolute -top-28 -left-28 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl"
-          animate={{ x: [0, 26, 0], y: [0, 16, 0] }}
-          transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          aria-hidden
-          className="absolute -bottom-36 -right-24 h-80 w-80 rounded-full bg-cyan-200/15 blur-3xl"
-          animate={{ x: [0, -20, 0], y: [0, -14, 0] }}
-          transition={{ duration: 6.4, repeat: Infinity, ease: 'easeInOut' }}
-        />
+      {/* Hero — splash-style: dark canvas + image-led card (mobile-first) */}
+      <div className="relative overflow-hidden bg-[#0a0a0c] text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(255,255,255,0.07),transparent_50%),radial-gradient(circle_at_80%_100%,rgba(163,230,53,0.06),transparent_42%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#121214_0%,#0a0a0c_40%,#050506_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:22px_22px] opacity-35" />
 
         <motion.div
-          ref={heroPanelRef}
-          onPointerMove={handleHeroPointerMove}
-          onPointerLeave={handleHeroPointerLeave}
-          className="relative px-4 pt-10 pb-10"
-          style={{ transformStyle: 'preserve-3d' }}
-          animate={{ rotateX: tilt.rx, rotateY: tilt.ry }}
-          transition={{ type: 'spring', stiffness: 180, damping: 18 }}
-        >
-          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md shadow-[0_30px_90px_rgba(0,0,0,0.35)] overflow-hidden">
-            <div className="p-5">
-              {/* Top strip */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-1 text-xs font-medium">
-                  <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(52,211,153,0.7)]" />
+          aria-hidden
+          className="absolute -top-24 right-0 h-56 w-56 rounded-full bg-lime-400/10 blur-3xl"
+          animate={{ opacity: [0.35, 0.55, 0.35] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+
+        <div className="relative px-4 pt-8 pb-8 max-w-[480px] mx-auto w-full">
+          <motion.p
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center text-[11px] font-medium uppercase tracking-[0.2em] text-white/45 mb-5"
+          >
+            Orphanage Connect
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="relative overflow-hidden rounded-[28px] bg-zinc-900 shadow-[0_40px_100px_rgba(0,0,0,0.65)] ring-1 ring-white/[0.08]"
+          >
+            <div className="relative aspect-[16/11] max-h-[min(52vw,240px)] w-full shrink-0 overflow-hidden sm:max-h-[260px]">
+              <img
+                src={heroImage}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/20 to-transparent" />
+              <div className="absolute left-3 top-3 right-3 flex items-start justify-between gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-black/45 px-3 py-1.5 text-[11px] font-medium text-white backdrop-blur-md ring-1 ring-white/15">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
                   Verified NGO
                 </div>
-                <div className="text-xs text-white/70 tracking-wide whitespace-nowrap">
-                  {ashram.location}
-                </div>
-              </div>
-
-              {/* Greeting */}
-              <div className="flex justify-between items-center mb-6 mt-4">
-                <div>
-                  <h1 className="text-2xl font-serif font-bold tracking-tight">
-                    Namaste, {currentUser ? getFirstName(currentUser.name) : 'Guest'}
-                  </h1>
-                  <p className="text-sm text-white/80">Welcome to our family</p>
-                </div>
-                <Link to="/profile">
-                  <div className="h-12 w-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center font-bold text-lg border border-white/25 shadow-[0_18px_60px_rgba(0,0,0,0.25)] transition-transform hover:scale-110">
-                    {currentUser ? currentUser.name.charAt(0) : 'G'}
-                  </div>
+                <Link
+                  to="/profile"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/40 text-sm font-bold text-white backdrop-blur-md ring-1 ring-white/20 transition-transform active:scale-95"
+                >
+                  {currentUser ? currentUser.name.charAt(0) : 'G'}
                 </Link>
               </div>
+            </div>
 
-              {/* Institute Info */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2 className="text-3xl font-serif font-bold mb-2">{ashram.name}</h2>
-                <div className="flex items-center gap-2 text-white/90 mb-4">
-                  <MapPin className="h-4 w-4 text-emerald-200/90" />
-                  <p className="text-sm">{ashram.location}</p>
-                </div>
-                <p className="text-sm text-white/90 leading-relaxed line-clamp-3">
-                  {ashram.description}
-                </p>
-              </motion.div>
+            <div className="flex flex-col bg-gradient-to-b from-zinc-900 to-black px-5 pb-5 pt-4">
+              <p className="text-[13px] text-white/55">
+                Namaste,{' '}
+                <span className="font-medium text-white/90">
+                  {currentUser ? getFirstName(currentUser.name) : 'Guest'}
+                </span>
+              </p>
+              <p className="text-[11px] text-white/40 mb-3">Welcome to our family</p>
 
-              {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-3 mt-6">
-                <Card className="relative bg-white/10 backdrop-blur-sm border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.25)] overflow-hidden">
-                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-emerald-300/60 to-cyan-200/50 opacity-70" />
-                  <CardContent className="p-4 text-center relative z-10">
-                    <Users className="h-5 w-5 mx-auto mb-2 text-emerald-200/90" />
-                    <p className="text-2xl font-bold text-white">50+</p>
-                    <p className="text-xs text-white/80">Children</p>
-                  </CardContent>
-                </Card>
-                <Card className="relative bg-white/10 backdrop-blur-sm border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.25)] overflow-hidden">
-                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-emerald-300/60 to-cyan-200/50 opacity-70" />
-                  <CardContent className="p-4 text-center relative z-10">
-                    <Gift className="h-5 w-5 mx-auto mb-2 text-cyan-200/90" />
-                    <p className="text-2xl font-bold text-white">{needs.length}</p>
-                    <p className="text-xs text-white/80">Active Needs</p>
-                  </CardContent>
-                </Card>
-                <Card className="relative bg-white/10 backdrop-blur-sm border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.25)] overflow-hidden">
-                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-emerald-300/60 to-cyan-200/50 opacity-70" />
-                  <CardContent className="p-4 text-center relative z-10">
-                    <Heart className="h-5 w-5 mx-auto mb-2 text-rose-200/80" />
-                    <p className="text-2xl font-bold text-white">₹1.2L</p>
-                    <p className="text-xs text-white/80">This Month</p>
-                  </CardContent>
-                </Card>
+              <div className="mb-3 flex -space-x-2">
+                {(galleryThumbs.length > 0
+                  ? galleryThumbs
+                  : [heroImage, heroImage, heroImage]
+                ).map((url, i) => (
+                  <div
+                    key={`${url}-${i}`}
+                    className="h-9 w-9 rounded-full border-2 border-zinc-900 ring-1 ring-white/15 overflow-hidden bg-white/10"
+                  >
+                    <img src={url} alt="" className="h-full w-full object-cover" />
+                  </div>
+                ))}
               </div>
 
-              <div className="mt-6 flex items-center justify-between gap-3">
-                <div className="text-xs text-white/80 leading-tight">
-                  {urgentNeeds.length} urgent need{urgentNeeds.length === 1 ? '' : 's'} right now
+              <h1 className="font-serif text-[22px] font-semibold leading-tight tracking-tight text-white sm:text-2xl">
+                {ashram.name}
+              </h1>
+              <div className="mt-2 flex items-start gap-2 text-[13px] text-white/55">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-lime-300/80" />
+                <span className="leading-snug">{ashram.location}</span>
+              </div>
+              <p className="mt-2 text-[13px] leading-relaxed text-white/45 line-clamp-3">
+                {ashram.description}
+              </p>
+
+              <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="rounded-2xl bg-white/[0.07] px-2 py-3 text-center ring-1 ring-white/10">
+                  <Users className="mx-auto mb-1 h-4 w-4 text-lime-200/90" />
+                  <p className="text-lg font-bold text-white">50+</p>
+                  <p className="text-[10px] text-white/55">Children</p>
                 </div>
+                <div className="rounded-2xl bg-white/[0.07] px-2 py-3 text-center ring-1 ring-white/10">
+                  <Gift className="mx-auto mb-1 h-4 w-4 text-white/80" />
+                  <p className="text-lg font-bold text-white">{needs.length}</p>
+                  <p className="text-[10px] text-white/55">Needs</p>
+                </div>
+                <div className="rounded-2xl bg-white/[0.07] px-2 py-3 text-center ring-1 ring-white/10">
+                  <Heart className="mx-auto mb-1 h-4 w-4 text-rose-300/80" />
+                  <p className="text-lg font-bold text-white">₹1.2L</p>
+                  <p className="text-[10px] text-white/55">This mo.</p>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-[11px] text-white/45">
+                  {urgentNeeds.length} urgent need{urgentNeeds.length === 1 ? '' : 's'} right now
+                </p>
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="bg-white/15 text-white hover:bg-white/20 h-8"
+                  className="h-11 w-full rounded-full bg-white text-[14px] font-semibold text-black shadow-[0_12px_32px_rgba(255,255,255,0.12)] hover:bg-white/95 sm:w-auto sm:min-w-[140px] sm:shrink-0"
                   onClick={() => {
                     mainRef.current?.scrollIntoView({
                       behavior: 'smooth',
@@ -204,12 +192,12 @@ export function Home() {
                     });
                   }}
                 >
-                  Explore <ArrowRight className="h-4 w-4 ml-1" />
+                  Explore <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -304,7 +292,10 @@ export function Home() {
                   transition={{ duration: 0.35, delay: i * 0.06 }}
                 >
                   <Card className="border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer transform-gpu hover:-translate-y-0.5 hover:scale-[1.02]"
-                    onClick={() => navigate(`/donate/${need.id}`)}
+                    onClick={() => {
+                      addNeedToCart(need);
+                      navigate(`/donate/${need.ashramId}?need=${need.id}`);
+                    }}
                   >
                     <CardContent className="p-4">
                       <div className="flex gap-4">

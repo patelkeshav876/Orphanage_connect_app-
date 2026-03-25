@@ -49,3 +49,7 @@ logs/
 # =========================
 *.swp
 *.swo
+
+# Project-specific / leftover files
+guidelines/
+Untitled
